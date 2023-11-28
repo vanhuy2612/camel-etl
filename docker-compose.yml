@@ -21,3 +21,7 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: 123456
       ME_CONFIG_MONGODB_URL: mongodb://root:123456@mongo:27017/
+  
+  camel-etl:
+    image: camel-etl:v1
+    restart: always

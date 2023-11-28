@@ -27,10 +27,10 @@
             uri: mongodb
             id: to-f36d
             parameters:
-              connectionBean: mongodb://root:123456@localhost:27017
+              connectionBean: mongodb://root:123456@mongo:27017
               collection: shareholders
               database: kbsv
-              hosts: localhost:27017
+              hosts: mongo:27017
               operation: update
               outputType: DocumentList
               authSource: admin
