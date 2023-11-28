@@ -1,0 +1,44 @@
+- route:
+    nodePrefixId: route-25b
+    id: route-8cb6
+    from:
+      uri: kafka
+      id: from-f15d
+      parameters:
+        topic: vietstock_transfer_data_shareholder
+        brokers: 10.100.30.100:19092
+        clientId: STOCK_CLIENT_ID_HuyDV
+        groupId: STOCK_GROUP_ID_HuyDV
+      steps:
+        - setHeader:
+            name: FIELDS_PROJECTION
+            expression:
+              js:
+                expression: "// thêm project cho câu lệnh mongoDB\r\n// let key = \"CamelMongoDbFieldsProjection\";\r\n// let headers = {\"_id\": 1, \"other\": 1};\r\n// exchange.getIn().setHeader(key, JSON.stringify(headers));\r\n// console.log(\"Get Projection Header\", exchange.getIn().getHeader(key));\r\n// exchange.getIn().getHeader(key);\r\n\r\n// thêm filter cho câu lệnh update\r\nlet filterKey = \"CamelMongoDbCriteria\";\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet symbol = payload.symbol;\r\nlet query = {\r\n    symbol: symbol,\r\n}\r\nexchange.getIn().setHeader(filterKey, JSON.stringify(query));\r\nconsole.log(\"Get Filter Header\", exchange.getIn().getHeader(filterKey));\r\nexchange.getIn().getHeader(filterKey);"
+                id: js-c416
+            id: setHeader-a091
+        - setBody:
+            expression:
+              js:
+                expression: "// Câu lệnh append dữ liệu vào mảng\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet data = payload?.data || [];\r\nbody = {\r\n    $push: {\r\n        data: { $each: data }\r\n    }\r\n}\r\nexchange.getIn().setBody(JSON.stringify(body));\r\nexchange.getIn().getBody();"
+                id: js-36a1
+            id: setBody-dce0
+        - to:
+            uri: mongodb
+            id: to-f36d
+            parameters:
+              connectionBean: mongodb://root:123456@localhost:27017
+              collection: shareholders
+              database: kbsv
+              hosts: localhost:27017
+              operation: update
+              outputType: DocumentList
+              authSource: admin
+              password: '123456'
+              username: root
+        - setBody:
+            expression:
+              js:
+                expression: console.log(exchange.getIn().getBody());
+                id: js-e16b
+            id: setBody-2417
