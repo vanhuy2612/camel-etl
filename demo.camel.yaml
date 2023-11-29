@@ -5,10 +5,10 @@
       uri: kafka
       id: from-f15d
       parameters:
-        topic: vietstock_transfer_data_shareholder
-        brokers: 10.100.30.100:19092
-        clientId: STOCK_CLIENT_ID_HuyDV
-        groupId: STOCK_GROUP_ID_HuyDV
+        topic: '{{KAFKA_TOPIC}}'
+        groupId: '{{KAFKA_GROUPID}}'
+        brokers: '{{KAFKA_BROKER}}'
+        clientId: '{{KAFKA_CLIENTID}}'
       steps:
         - setHeader:
             name: FIELDS_PROJECTION
@@ -27,15 +27,15 @@
             uri: mongodb
             id: to-f36d
             parameters:
-              connectionBean: mongodb://root:123456@mongo:27017
-              collection: shareholders
-              database: kbsv
-              hosts: mongo:27017
+              connectionBean: '{{MONGODB_URL}}'
+              collection: '{{MONGODB_COLLECTION}}'
+              database: '{{MONGODB_DATABASE}}'
+              hosts: '{{MONGODB_HOST}}'
               operation: update
               outputType: DocumentList
-              authSource: admin
-              password: '123456'
-              username: root
+              authSource: '{{MONGODB_AUTHSOURCE}}'
+              password: '{{MONGODB_PASSWORD}}'
+              username: '{{MONGODB_USERNAME}}'
         - setBody:
             expression:
               js:

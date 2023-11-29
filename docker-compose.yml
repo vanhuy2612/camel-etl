@@ -25,3 +25,15 @@ services:
   camel-etl:
     image: camel-etl:v1
     restart: always
+    environment:
+      KAFKA_TOPIC: vietstock_transfer_data_shareholder
+      KAFKA_BROKER: 10.100.30.100:19092
+      KAFKA_GROUPID: STOCK_GROUP_ID_HuyDV
+      KAFKA_CLIENTID: STOCK_CLIENT_ID_HuyDV
+      MONGODB_URL: mongodb://root:123456@mongo:27017
+      MONGODB_COLLECTION: shareholders
+      MONGODB_DATABASE: kbsv
+      MONGODB_HOST: mongo:27017
+      MONGODB_AUTHSOURCE: admin
+      MONGODB_USERNAME: root
+      MONGODB_PASSWORD: '123456'
