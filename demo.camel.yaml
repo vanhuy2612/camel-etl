@@ -5,40 +5,56 @@
       uri: kafka
       id: from-f15d
       parameters:
-        topic: '{{KAFKA_TOPIC}}'
-        groupId: '{{KAFKA_GROUPID}}'
-        brokers: '{{KAFKA_BROKER}}'
-        clientId: '{{KAFKA_CLIENTID}}'
+        topic: '{{KAFKA_TOPIC:vietstock_transfer_data_shareholder}}'
+        groupId: '{{KAFKA_GROUPID:STOCK_GROUP_ID_UAT}}'
+        brokers: '{{KAFKA_BROKER:10.100.30.100:19092}}'
+        clientId: '{{KAFKA_CLIENTID:STOCK_CLIENT_ID_UAT}}'
       steps:
+        - log:
+            message: ${body}
+            loggingLevel: INFO
+            logName: Kafka Transfer Data
+            id: log-5463
         - setHeader:
-            name: FIELDS_PROJECTION
+            name: Set update condition
             expression:
               js:
-                expression: "// thêm project cho câu lệnh mongoDB\r\n// let key = \"CamelMongoDbFieldsProjection\";\r\n// let headers = {\"_id\": 1, \"other\": 1};\r\n// exchange.getIn().setHeader(key, JSON.stringify(headers));\r\n// console.log(\"Get Projection Header\", exchange.getIn().getHeader(key));\r\n// exchange.getIn().getHeader(key);\r\n\r\n// thêm filter cho câu lệnh update\r\nlet filterKey = \"CamelMongoDbCriteria\";\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet symbol = payload.symbol;\r\nlet query = {\r\n    symbol: symbol,\r\n}\r\nexchange.getIn().setHeader(filterKey, JSON.stringify(query));\r\nconsole.log(\"Get Filter Header\", exchange.getIn().getHeader(filterKey));\r\nexchange.getIn().getHeader(filterKey);"
+                expression: "// thêm lệnh upsert cho câu lệnh mongoDB\r\nlet key = \"CamelMongoDbUpsert\";\r\nlet isUpsert = true;\r\nexchange.getIn().setHeader(key, isUpsert);\r\nexchange.getIn().getHeader(key);\r\n\r\n// Đặt update multiple\r\nlet multipleUpdateKey = \"CamelMongoDbMultiUpdate\";\r\nexchange.getIn().setHeader(multipleUpdateKey, true);\r\nexchange.getIn().getHeader(multipleUpdateKey);\r\n\r\n// thêm filter cho câu lệnh update\r\nlet filterKey = \"CamelMongoDbCriteria\";\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet symbol = payload.symbol;\r\nlet query = {\r\n    code: symbol,\r\n}\r\nexchange.getIn().setHeader(filterKey, JSON.stringify(query));\r\nexchange.getIn().getHeader(filterKey);"
                 id: js-c416
             id: setHeader-a091
+            description: Set upsert and set condition for update query
+        - log:
+            message: ${headers}
+            loggingLevel: INFO
+            logName: Log Query Filter
+            id: log-e059
         - setBody:
             expression:
               js:
-                expression: "// Câu lệnh append dữ liệu vào mảng\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet data = payload?.data || [];\r\nbody = {\r\n    $push: {\r\n        data: { $each: data }\r\n    }\r\n}\r\nexchange.getIn().setBody(JSON.stringify(body));\r\nexchange.getIn().getBody();"
+                expression: "// Câu lệnh append dữ liệu vào mảng\r\nlet payload = (JSON.parse(exchange.getIn().getBody())).data;\r\nlet data = payload?.data || [];\r\nbody = {\r\n    $set: {\r\n        shareholders: data,\r\n    }\r\n}\r\nexchange.getIn().setBody(JSON.stringify(body));\r\nexchange.getIn().getBody();"
                 id: js-36a1
             id: setBody-dce0
+            description: Set data for update query
+        - log:
+            message: ${body}
+            loggingLevel: INFO
+            logName: Log Query Body
+            id: log-2d24
         - to:
             uri: mongodb
             id: to-f36d
             parameters:
-              connectionBean: '{{MONGODB_URL}}'
-              collection: '{{MONGODB_COLLECTION}}'
-              database: '{{MONGODB_DATABASE}}'
-              hosts: '{{MONGODB_HOST}}'
+              connectionBean: '{{MONGODB_URL:mongodb://root:KBsvIIS@10.100.30.101:27017/}}'
+              collection: '{{MONGODB_COLLECTION:company_infomation}}'
+              database: '{{MONGODB_DATABASE:investment}}'
+              hosts: '{{MONGODB_HOST:10.100.30.101:27017}}'
               operation: update
               outputType: DocumentList
-              authSource: '{{MONGODB_AUTHSOURCE}}'
-              password: '{{MONGODB_PASSWORD}}'
-              username: '{{MONGODB_USERNAME}}'
-        - setBody:
-            expression:
-              js:
-                expression: console.log(exchange.getIn().getBody());
-                id: js-e16b
-            id: setBody-2417
+              authSource: '{{MONGODB_AUTHSOURCE:admin}}'
+              password: '{{MONGODB_PASSWORD:KBsvIIS}}'
+              username: '{{MONGODB_USERNAME:root}}'
+        - log:
+            message: ${body}
+            loggingLevel: INFO
+            logName: Mongo Update Result
+            id: log-1865
